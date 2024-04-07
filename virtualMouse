@@ -1,0 +1,67 @@
+import cv2
+from cvzone.HandTrackingModule import HandDetector
+import pytesseract  # Install Tesseract OCR: `pip install pytesseract`
+
+# Configure Tesseract OCR path (adjust as needed)
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Replace with your Tesseract path (if necessary)
+
+class Button:
+    def __init__(self, pos, width, height, value):
+        self.pos = pos
+        self.width = width
+        self.height = height
+        self.value = value
+
+    def draw(self, img):
+        cv2.rectangle(img, self.pos, (self.pos[0] + self.width, self.pos[1] + self.height),
+                       (225, 225, 225), cv2.FILLED)
+        cv2.rectangle(img, self.pos, (self.pos[0] + self.width, self.pos[1] + self.height),
+                       (50, 50, 50), 3)
+        cv2.putText(img, self.value, (self.pos[0] + 20, self.pos[1] + 60), cv2.FONT_HERSHEY_PLAIN,
+                    2, (50, 50, 50), 2)
+
+    def checkClick(self, x, y, img):  # Accept image as a parameter
+        if self.pos[0] < x < self.pos[0] + self.width and \
+                self.pos[1] < y < self.pos[1] + self.height:
+            cv2.rectangle(img, (self.pos[0] + 3, self.pos[1] + 3),
+                          (self.pos[0] + self.width - 3, self.pos[1] + self.height - 3),
+                          (255, 255, 255), cv2.FILLED)
+            cv2.putText(img, self.value, (self.pos[0] + 25, self.pos[1] + 80), cv2.FONT_HERSHEY_PLAIN,
+                        5, (0, 0, 0), 5)
+            return True
+        return False
+
+
+# Initialize Webcam
+cap = cv2.VideoCapture(0)
+detector = HandDetector(detectionCon=0.8, maxHands=1)
+
+# Buttons
+buttonListValues = [['7', '8', '9', '*'],
+                   ['4', '5', '6', '-'],
+                   ['1', '2', '3', '+'],
+                   ['0', '/', '.', '=']]
+buttonList = []
+for x in range(4):
+    for y in range(4):
+        xpos = x * 100 + 800
+        ypos = y * 100 + 150
+        buttonList.append(Button((xpos, ypos), 100, 100, buttonListValues[y][x]))
+
+myEquation = ''
+delayCounter = 0
+selected_box = None
+number1, number2 = 0, 0  # Initialize numbers
+chosen_operator = None
+
+
+def draw_calculator_interface(img):
+    # Calculate box coordinates based on desired layout
+    box1_x, box1_y = 100, 100
+    box2_x, box2_y = 400, 100
+    operator_pos = (250, 150)  # Center of operator box
+    result_box_x, result_box_y = 700, 100
+
+    # Draw boxes and text
+    cv2.rectangle(img, (box1_x, box1_y), (box1_x + 100, box1_y + 100), (255, 0, 0), 2)  # Red (number 1 box)
+    cv2.rectangle(img, (box2_x, box2_y), (box2_x + 100, box2_y + 100), (0, 255, 0), 2)  # Green (number 2 box)
